@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<system xmlns="http://www.eiffel.com/developers/xml/configuration-1-23-0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.eiffel.com/developers/xml/configuration-1-23-0 http://www.eiffel.com/developers/xml/configuration-1-23-0.xsd" name="simple_shaderc" uuid="D8E5F1A3-9B2C-4D6E-A7F0-3C8B9E1D2A4F" library_target="simple_shaderc">
+	<description>Eiffel wrapper for Google's shaderc library - runtime GLSL to SPIR-V compilation</description>
+	<target name="simple_shaderc">
+		<root all_classes="true"/>
+		<version major="0" minor="1" release="0" build="1"/>
+		<option warning="warning" manifest_array_type="mismatch_warning">
+			<assertions precondition="true" postcondition="true" check="true" invariant="true" loop="true" supplier_precondition="true"/>
+		</option>
+		<setting name="console_application" value="true"/>
+		<setting name="dead_code_removal" value="feature"/>
+		<capability>
+			<concurrency support="scoop"/>
+			<void_safety support="all"/>
+		</capability>
+		<library name="base" location="$ISE_LIBRARY\library\base\base.ecf"/>
+		<external_include location="$VULKAN_SDK\Include"/>
+		<external_object location="$VULKAN_SDK\Lib\shaderc_shared.lib">
+			<condition>
+				<platform value="windows"/>
+			</condition>
+		</external_object>
+		<cluster name="src" location=".\src\" recursive="true"/>
+	</target>
+	<target name="simple_shaderc_tests" extends="simple_shaderc">
+		<description>Test target for simple_shaderc</description>
+		<root class="TEST_APP" feature="make"/>
+		<cluster name="test_classes" location=".\testing\" recursive="true"/>
+	</target>
+</system>

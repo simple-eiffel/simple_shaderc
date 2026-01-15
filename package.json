@@ -1,0 +1,19 @@
+{
+  "name": "simple_shaderc",
+  "version": "0.1.0",
+  "description": "Eiffel wrapper for Google's shaderc library - runtime GLSL to SPIR-V compilation",
+  "author": "Larry Rix",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/simple-eiffel/simple_shaderc"
+  },
+  "dependencies": {
+    "simple_testing": ">=0.1.0"
+  },
+  "eiffel": {
+    "ecf": "simple_shaderc.ecf",
+    "library_target": "simple_shaderc",
+    "test_target": "simple_shaderc_tests"
+  }
+}

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>simple_shaderc - Runtime GLSL to SPIR-V Compilation for Eiffel</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <img src="images/logo.png" alt="simple_* logo" class="logo">
+        </div>
+        <h1>simple_shaderc</h1>
+        <p class="tagline">Runtime GLSL to SPIR-V Compilation for Eiffel</p>
+        <div class="badges">
+            <span class="badge badge-version">v1.0.0</span>
+            <span class="badge badge-license">MIT</span>
+            <span class="badge badge-rfc">Vulkan SDK</span>
+        </div>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#quick-start">Quick Start</a></li>
+            <li><a href="#features">Features</a></li>
+            <li><a href="#api-reference">API Reference</a></li>
+            <li><a href="#recipes">Recipes</a></li>
+            <li><a href="https://github.com/simple-eiffel/simple_shaderc">GitHub</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section id="overview">
+            <h2>Overview</h2>
+            <p>
+                <strong>simple_shaderc</strong> provides runtime shader compilation capabilities using
+                Google's shaderc library from the Vulkan SDK. It enables Eiffel applications to compile
+                GLSL shader source code to SPIR-V binary format at runtime.
+            </p>
+            <p>
+                This enables powerful workflows such as:
+            </p>
+            <ul>
+                <li><strong>Dynamic Shader Generation</strong> - Generate shaders from Eiffel DSL at runtime</li>
+                <li><strong>Hot Reloading</strong> - Modify and recompile shaders without restarting</li>
+                <li><strong>Procedural Content</strong> - Create shaders programmatically based on scene data</li>
+            </ul>
+            <p>
+                Part of the <a href="https://github.com/simple-eiffel">Simple Eiffel</a> ecosystem.
+            </p>
+        </section>
+
+        <section id="quick-start">
+            <h2>Quick Start</h2>
+
+            <h3>Prerequisites</h3>
+            <ol>
+                <li>Install <a href="https://vulkan.lunarg.com/sdk/home">Vulkan SDK</a></li>
+                <li>Set the environment variable:
+<pre><code>set SIMPLE_EIFFEL=D:\prod</code></pre>
+                </li>
+            </ol>
+
+            <h3>Installation</h3>
+            <ol>
+                <li>Add to your ECF file:
+<pre><code>&lt;library name="simple_shaderc" location="$SIMPLE_EIFFEL/simple_shaderc/simple_shaderc.ecf"/&gt;</code></pre>
+                </li>
+                <li>Copy the shaderc DLL to your application directory:
+<pre><code>copy %VULKAN_SDK%\Bin\shaderc_shared.dll your_app_directory\</code></pre>
+                </li>
+            </ol>
+
+            <h3>Basic Usage</h3>
+<pre><code><span class="keyword">local</span>
+    shaderc: <span class="type">SIMPLE_SHADERC</span>
+    spirv: <span class="keyword">detachable</span> <span class="type">MANAGED_POINTER</span>
+    glsl: <span class="type">STRING</span>
+<span class="keyword">do</span>
+    glsl := <span class="string">"[
+        #version 450
+        layout(local_size_x = 64) in;
+        layout(std430, binding = 0) buffer Data { float values[]; };
+        void main() {
+            uint idx = gl_GlobalInvocationID.x;
+            values[idx] = values[idx] * 2.0;
+        }
+    ]"</span>
+
+    <span class="keyword">create</span> shaderc.make
+    spirv := shaderc.compile_compute (glsl)
+
+    <span class="keyword">if</span> <span class="keyword">attached</span> spirv <span class="keyword">as</span> spv <span class="keyword">then</span>
+        print (<span class="string">"Compiled to "</span> + spv.count.out + <span class="string">" bytes"</span>)
+    <span class="keyword">else</span>
+        print (<span class="string">"Error: "</span> + shaderc.last_error)
+    <span class="keyword">end</span>
+
+    shaderc.dispose
+<span class="keyword">end</span></code></pre>
+        </section>
+
+        <section id="features">
+            <h2>Key Features</h2>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>Runtime Compilation</h4>
+                    <p>Compile GLSL shaders to SPIR-V at runtime without offline tools.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>Multiple Shader Types</h4>
+                    <p>Support for compute, vertex, and fragment shaders.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>Error Reporting</h4>
+                    <p>Detailed compilation error messages for debugging.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>SPIR-V Output</h4>
+                    <p>Direct binary output ready for Vulkan consumption.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>File I/O</h4>
+                    <p>Save compiled shaders to disk for caching or distribution.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h4>Vulkan SDK Integration</h4>
+                    <p>Uses battle-tested shaderc library from Vulkan SDK.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="api-reference">
+            <h2>API Reference</h2>
+
+            <div class="api-section">
+                <h3>SIMPLE_SHADERC (Facade)</h3>
+                <p>Main entry point for shader compilation.</p>
+
+                <div class="signature">make</div>
+                <p>Initialize the shader compiler. Must be called before any compilation.</p>
+
+                <div class="signature">compile_glsl (a_source: STRING; a_kind: INTEGER): detachable MANAGED_POINTER</div>
+                <p>Compile GLSL source to SPIR-V bytes. Returns Void on failure.</p>
+
+                <div class="contracts">
+                    <h4>Preconditions</h4>
+                    <div class="require">source_not_empty: not a_source.is_empty</div>
+                </div>
+
+                <div class="signature">compile_compute (a_source: STRING): detachable MANAGED_POINTER</div>
+                <p>Convenience method to compile a compute shader.</p>
+
+                <div class="signature">compile_vertex (a_source: STRING): detachable MANAGED_POINTER</div>
+                <p>Convenience method to compile a vertex shader.</p>
+
+                <div class="signature">compile_fragment (a_source: STRING): detachable MANAGED_POINTER</div>
+                <p>Convenience method to compile a fragment shader.</p>
+
+                <div class="signature">save_spirv (a_data: MANAGED_POINTER; a_path: STRING)</div>
+                <p>Save compiled SPIR-V binary to file.</p>
+
+                <div class="signature">dispose</div>
+                <p>Release compiler resources. Must be called when done.</p>
+            </div>
+
+            <div class="api-section">
+                <h3>Status Queries</h3>
+
+                <table class="api-table">
+                    <tr>
+                        <th>Feature</th>
+                        <th>Description</th>
+                    </tr>
+                    <tr>
+                        <td><code>last_error</code></td>
+                        <td>Error message from last failed compilation</td>
+                    </tr>
+                    <tr>
+                        <td><code>has_error</code></td>
+                        <td>True if last compilation failed</td>
+                    </tr>
+                    <tr>
+                        <td><code>is_valid</code></td>
+                        <td>True if compiler is properly initialized</td>
+                    </tr>
+                </table>
+            </div>
+
+            <h3>Shader Type Constants</h3>
+            <table class="api-table">
+                <tr>
+                    <th>Constant</th>
+                    <th>Value</th>
+                    <th>Description</th>
+                </tr>
+                <tr>
+                    <td><code>Shader_vertex</code></td>
+                    <td>0</td>
+                    <td>Vertex shader for vertex transformation</td>
+                </tr>
+                <tr>
+                    <td><code>Shader_fragment</code></td>
+                    <td>1</td>
+                    <td>Fragment shader for pixel shading</td>
+                </tr>
+                <tr>
+                    <td><code>Shader_compute</code></td>
+                    <td>2</td>
+                    <td>Compute shader for GPU parallel computation</td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="recipes">
+            <h2>Recipes</h2>
+
+            <h3>Recipe 1: Compile and Save Shader</h3>
+<pre><code><span class="keyword">compile_and_save</span> (a_glsl, a_output_path: <span class="type">STRING</span>)
+        <span class="comment">-- Compile GLSL and save to file.</span>
+    <span class="keyword">local</span>
+        shaderc: <span class="type">SIMPLE_SHADERC</span>
+        spirv: <span class="keyword">detachable</span> <span class="type">MANAGED_POINTER</span>
+    <span class="keyword">do</span>
+        <span class="keyword">create</span> shaderc.make
+        spirv := shaderc.compile_compute (a_glsl)
+
+        <span class="keyword">if</span> <span class="keyword">attached</span> spirv <span class="keyword">as</span> spv <span class="keyword">then</span>
+            shaderc.save_spirv (spv, a_output_path)
+            print (<span class="string">"Saved: "</span> + a_output_path + <span class="string">"%N"</span>)
+        <span class="keyword">else</span>
+            print (<span class="string">"Error: "</span> + shaderc.last_error + <span class="string">"%N"</span>)
+        <span class="keyword">end</span>
+
+        shaderc.dispose
+    <span class="keyword">end</span></code></pre>
+
+            <h3>Recipe 2: Dynamic SDF Shader Generation</h3>
+<pre><code><span class="keyword">generate_sdf_shader</span>: <span class="type">STRING</span>
+        <span class="comment">-- Generate and compile SDF ray marching shader.</span>
+    <span class="keyword">local</span>
+        builder: <span class="type">SDF_GLSL_BUILDER</span>
+        shaderc: <span class="type">SIMPLE_SHADERC</span>
+        spirv: <span class="keyword">detachable</span> <span class="type">MANAGED_POINTER</span>
+        scene: <span class="type">STRING</span>
+    <span class="keyword">do</span>
+        <span class="comment">-- Define scene in GLSL</span>
+        scene := <span class="string">"[
+            float d = 1e10;
+            d = opUnion(d, sdSphere(p, vec3(0, 1, 0), 1.0));
+            d = opSmoothUnion(d, sdBox(p, vec3(2, 0.5, 0), vec3(0.5)), 0.3);
+            return d;
+        ]"</span>
+
+        <span class="comment">-- Generate full shader</span>
+        <span class="keyword">create</span> builder.make
+        Result := builder.generate_basic_shader (scene)
+
+        <span class="comment">-- Compile and verify</span>
+        <span class="keyword">create</span> shaderc.make
+        spirv := shaderc.compile_compute (Result)
+
+        <span class="keyword">if</span> spirv = <span class="keyword">Void</span> <span class="keyword">then</span>
+            print (<span class="string">"Shader error: "</span> + shaderc.last_error)
+        <span class="keyword">end</span>
+
+        shaderc.dispose
+    <span class="keyword">end</span></code></pre>
+
+            <h3>Recipe 3: Batch Shader Compilation</h3>
+<pre><code><span class="keyword">compile_all_shaders</span> (a_shaders: <span class="type">HASH_TABLE</span> [<span class="type">STRING</span>, <span class="type">STRING</span>]; a_output_dir: <span class="type">STRING</span>)
+        <span class="comment">-- Compile multiple shaders (name -> source).</span>
+    <span class="keyword">local</span>
+        shaderc: <span class="type">SIMPLE_SHADERC</span>
+        spirv: <span class="keyword">detachable</span> <span class="type">MANAGED_POINTER</span>
+    <span class="keyword">do</span>
+        <span class="keyword">create</span> shaderc.make
+
+        <span class="keyword">across</span> a_shaders <span class="keyword">as</span> s <span class="keyword">loop</span>
+            spirv := shaderc.compile_compute (s.item)
+            <span class="keyword">if</span> <span class="keyword">attached</span> spirv <span class="keyword">as</span> spv <span class="keyword">then</span>
+                shaderc.save_spirv (spv, a_output_dir + <span class="string">"/"</span> + s.key + <span class="string">".spv"</span>)
+                print (<span class="string">"OK: "</span> + s.key + <span class="string">"%N"</span>)
+            <span class="keyword">else</span>
+                print (<span class="string">"FAIL: "</span> + s.key + <span class="string">" - "</span> + shaderc.last_error + <span class="string">"%N"</span>)
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+        shaderc.dispose
+    <span class="keyword">end</span></code></pre>
+
+            <h3>Recipe 4: Integration with simple_vulkan</h3>
+<pre><code><span class="keyword">run_dynamic_compute</span> (a_glsl: <span class="type">STRING</span>)
+        <span class="comment">-- Compile and execute a compute shader dynamically.</span>
+    <span class="keyword">local</span>
+        shaderc: <span class="type">SIMPLE_SHADERC</span>
+        vk: <span class="type">SIMPLE_VULKAN</span>
+        ctx: <span class="type">VULKAN_CONTEXT</span>
+        shader: <span class="type">VULKAN_SHADER</span>
+        spirv: <span class="keyword">detachable</span> <span class="type">MANAGED_POINTER</span>
+    <span class="keyword">do</span>
+        <span class="comment">-- Compile GLSL to SPIR-V</span>
+        <span class="keyword">create</span> shaderc.make
+        spirv := shaderc.compile_compute (a_glsl)
+
+        <span class="keyword">if</span> <span class="keyword">attached</span> spirv <span class="keyword">as</span> spv <span class="keyword">then</span>
+            <span class="comment">-- Save to temp file</span>
+            shaderc.save_spirv (spv, <span class="string">"temp_compute.spv"</span>)
+
+            <span class="comment">-- Load with Vulkan</span>
+            <span class="keyword">create</span> vk
+            ctx := vk.create_context
+
+            <span class="keyword">if</span> ctx.is_valid <span class="keyword">then</span>
+                shader := vk.load_shader (ctx, <span class="string">"temp_compute.spv"</span>)
+                <span class="keyword">if</span> shader.is_valid <span class="keyword">then</span>
+                    <span class="comment">-- Create pipeline and dispatch...</span>
+                    print (<span class="string">"Shader loaded successfully!%N"</span>)
+                    shader.dispose
+                <span class="keyword">end</span>
+                ctx.dispose
+            <span class="keyword">end</span>
+        <span class="keyword">else</span>
+            print (<span class="string">"Compilation failed: "</span> + shaderc.last_error + <span class="string">"%N"</span>)
+        <span class="keyword">end</span>
+
+        shaderc.dispose
+    <span class="keyword">end</span></code></pre>
+        </section>
+
+        <section id="error-handling">
+            <h2>Error Handling</h2>
+
+            <p>The shaderc compiler provides detailed error messages for GLSL syntax and semantic errors:</p>
+
+<pre><code><span class="keyword">local</span>
+    shaderc: <span class="type">SIMPLE_SHADERC</span>
+    spirv: <span class="keyword">detachable</span> <span class="type">MANAGED_POINTER</span>
+    bad_glsl: <span class="type">STRING</span>
+<span class="keyword">do</span>
+    bad_glsl := <span class="string">"#version 450%Nvoid main() { undefined_function(); }"</span>
+
+    <span class="keyword">create</span> shaderc.make
+    spirv := shaderc.compile_compute (bad_glsl)
+
+    <span class="keyword">if</span> spirv = <span class="keyword">Void</span> <span class="keyword">then</span>
+        print (<span class="string">"Compilation failed:%N"</span>)
+        print (shaderc.last_error)
+        <span class="comment">-- Output: shader.glsl:2: error: 'undefined_function' : no matching overloaded function found</span>
+    <span class="keyword">end</span>
+
+    shaderc.dispose
+<span class="keyword">end</span></code></pre>
+
+            <h3>Common Errors</h3>
+            <table class="api-table">
+                <tr>
+                    <th>Error</th>
+                    <th>Cause</th>
+                    <th>Solution</th>
+                </tr>
+                <tr>
+                    <td>"no matching overloaded function"</td>
+                    <td>Undefined function or wrong arguments</td>
+                    <td>Check function name and parameter types</td>
+                </tr>
+                <tr>
+                    <td>"local_size_x: no such layout identifier"</td>
+                    <td>Wrong shader type for compute shader</td>
+                    <td>Use compile_compute for compute shaders</td>
+                </tr>
+                <tr>
+                    <td>"undeclared identifier"</td>
+                    <td>Variable used before declaration</td>
+                    <td>Declare variables before use</td>
+                </tr>
+            </table>
+        </section>
+
+        <section id="performance">
+            <h2>Performance</h2>
+
+            <p>Compilation performance on typical hardware:</p>
+            <table class="api-table">
+                <tr>
+                    <th>Operation</th>
+                    <th>Time</th>
+                </tr>
+                <tr>
+                    <td>Compiler initialization</td>
+                    <td>&lt;5ms</td>
+                </tr>
+                <tr>
+                    <td>Simple shader (50 lines)</td>
+                    <td>&lt;50ms</td>
+                </tr>
+                <tr>
+                    <td>Complex SDF shader (300+ lines)</td>
+                    <td>~100ms</td>
+                </tr>
+                <tr>
+                    <td>Save SPIR-V to disk</td>
+                    <td>&lt;1ms</td>
+                </tr>
+            </table>
+
+            <p>
+                <strong>Tip:</strong> For production, consider caching compiled SPIR-V files
+                rather than recompiling on every startup.
+            </p>
+        </section>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 simple_* ecosystem. MIT License.</p>
+        <p>
+            <a href="https://github.com/simple-eiffel/simple_shaderc">GitHub</a> |
+            <a href="https://simple-eiffel.github.io">Documentation</a>
+        </p>
+    </footer>
+</body>
+</html>

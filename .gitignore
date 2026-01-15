@@ -1,0 +1,25 @@
+# EiffelStudio build artifacts
+EIFGENs/
+*.swp
+
+# Logs
+*.log
+exception_trace.log
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# IDE
+.vscode/
+*.sublime-*
+
+# Binaries (built from source)
+*.exe
+*.dll
+*.lib
+*.o
+*.obj
+
+# Keep Clib headers but ignore logs
+Clib/*.log
