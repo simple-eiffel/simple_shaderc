@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<system xmlns="http://www.eiffel.com/developers/xml/configuration-1-23-0" name="simple_shaderc" uuid="D8E5F1A3-9B2C-4D6E-A7F0-3C8B9E1D2A4F" library_target="simple_shaderc">
+<system xmlns="http://www.eiffel.com/developers/xml/configuration-1-23-0" name="simple_shaderc" uuid="bf439e09-426c-4243-9547-29e00942e9ce" library_target="simple_shaderc">
 	<target name="simple_shaderc">
 		<root all_classes="true"/>
 		<option warning="warning"><assertions precondition="true" postcondition="true"/></option>
