@@ -23,3 +23,5 @@ Thumbs.db
 
 # Keep Clib headers but ignore logs
 Clib/*.log
+*.melted
+*.epr
