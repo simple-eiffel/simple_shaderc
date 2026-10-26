@@ -37,6 +37,23 @@ feature {NONE} -- Initialization
 			create last_error.make_empty
 		end
 
+feature -- Settings
+
+	targets_vulkan_1_3: BOOLEAN
+			-- Do compilations target Vulkan 1.3 and SPIR-V 1.6 (for GL_KHR_cooperative_matrix and
+			-- other newer extensions)? Otherwise shaderc's default (Vulkan 1.0, SPIR-V 1.0).
+
+	set_target_vulkan_1_3 (a_on: BOOLEAN)
+			-- Target Vulkan 1.3 / SPIR-V 1.6 (or shaderc's default) in later compilations.
+		do
+			targets_vulkan_1_3 := a_on
+			if attached compiler as c then
+				c.set_target_vulkan_1_3 (a_on)
+			end
+		ensure
+			set: targets_vulkan_1_3 = a_on
+		end
+
 feature -- Compilation
 
 	compile_glsl (a_source: STRING; a_kind: INTEGER): detachable MANAGED_POINTER
@@ -136,6 +153,9 @@ feature {NONE} -- Implementation
 		do
 			if compiler = Void then
 				create compiler.make
+				if attached compiler as c then
+					c.set_target_vulkan_1_3 (targets_vulkan_1_3)
+				end
 			end
 		ensure
 			compiler_exists: compiler /= Void

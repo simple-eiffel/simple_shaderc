@@ -31,6 +31,20 @@ feature -- Access
 	is_valid: BOOLEAN
 			-- Is compiler initialized successfully?
 
+	targets_vulkan_1_3: BOOLEAN
+			-- Does `compile' target Vulkan 1.3 and SPIR-V 1.6 (needed by GL_KHR_cooperative_matrix
+			-- and other newer extensions)? Otherwise shaderc's default (Vulkan 1.0, SPIR-V 1.0).
+
+feature -- Settings
+
+	set_target_vulkan_1_3 (a_on: BOOLEAN)
+			-- Target Vulkan 1.3 / SPIR-V 1.6 (or shaderc's default) in later compilations.
+		do
+			targets_vulkan_1_3 := a_on
+		ensure
+			set: targets_vulkan_1_3 = a_on
+		end
+
 feature -- Compilation
 
 	compile (a_source: STRING; a_kind: INTEGER; a_filename: STRING; a_entry_point: STRING): SHADERC_RESULT
@@ -58,7 +72,7 @@ feature -- Compilation
 				a_kind,
 				l_filename_c.item,
 				l_entry_c.item,
-				default_pointer  -- No options for now
+				targets_vulkan_1_3
 			)
 
 			create Result.make_from_handle (l_result_handle)
@@ -154,21 +168,30 @@ feature {NONE} -- C Externals
 		end
 
 	c_compile_into_spv (a_compiler, a_source: POINTER; a_size: INTEGER;
-						a_kind: INTEGER; a_filename, a_entry, a_options: POINTER): POINTER
-			-- Compile GLSL into SPIR-V.
+						a_kind: INTEGER; a_filename, a_entry: POINTER; a_vulkan_1_3: BOOLEAN): POINTER
+			-- Compile GLSL into SPIR-V; with `a_vulkan_1_3', for Vulkan 1.3 and SPIR-V 1.6.
 		external
 			"C inline use <shaderc/shaderc.h>"
 		alias
 			"[
-				return (EIF_POINTER)shaderc_compile_into_spv(
+				shaderc_compile_options_t o = NULL;
+				shaderc_compilation_result_t r;
+				if ($a_vulkan_1_3) {
+					o = shaderc_compile_options_initialize();
+					shaderc_compile_options_set_target_env(o, shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
+					shaderc_compile_options_set_target_spirv(o, shaderc_spirv_version_1_6);
+				}
+				r = shaderc_compile_into_spv(
 					(shaderc_compiler_t)$a_compiler,
 					(const char*)$a_source,
 					(size_t)$a_size,
 					(shaderc_shader_kind)$a_kind,
 					(const char*)$a_filename,
 					(const char*)$a_entry,
-					(const shaderc_compile_options_t)$a_options
+					o
 				);
+				if (o) shaderc_compile_options_release(o);
+				return (EIF_POINTER)r;
 			]"
 		end
 
