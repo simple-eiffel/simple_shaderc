@@ -24,7 +24,7 @@
 				<platform value="macintosh"/>
 			</condition>
 		</external_linker_flag>
-		<external_linker_flag value="-lshaderc_shared">
+		<external_linker_flag value="-lshaderc">
 			<condition>
 				<platform value="unix"/>
 			</condition>
