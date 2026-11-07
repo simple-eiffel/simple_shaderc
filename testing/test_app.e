@@ -25,6 +25,7 @@ feature {NONE} -- Initialization
 			run_test (agent lib_tests.test_compile_vertex_shader, "test_compile_vertex_shader")
 			run_test (agent lib_tests.test_compile_error_handling, "test_compile_error_handling")
 			run_test (agent lib_tests.test_sdf_sphere_shader, "test_sdf_sphere_shader")
+			run_test (agent lib_tests.test_target_vulkan_1_3_cooperative_matrix, "test_target_vulkan_1_3_cooperative_matrix")
 
 			print ("%N========================%N")
 			print ("Results: " + passed.out + " passed, " + failed.out + " failed%N")
