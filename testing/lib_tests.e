@@ -199,6 +199,54 @@ feature -- Tests
 			shaderc.dispose
 		end
 
+	test_target_vulkan_1_3_cooperative_matrix
+			-- A cooperative-matrix shader (fp16 tiles, f32 accumulator) compiles when the target is
+			-- Vulkan 1.3 / SPIR-V 1.6; a plain shader still compiles under that target. Reports
+			-- whether the bf16 variant (GL_EXT_bfloat16) compiles too.
+		local
+			shaderc: SIMPLE_SHADERC
+			l_coop, l_bf16: STRING
+		do
+			l_coop := "[
+				#version 450
+				#extension GL_KHR_cooperative_matrix : require
+				#extension GL_KHR_memory_scope_semantics : require
+				#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require
+				layout(local_size_x = 32) in;
+				layout(std430, binding = 0) buffer A { float16_t a[]; };
+				layout(std430, binding = 1) buffer C { float c[]; };
+				void main() {
+					coopmat<float16_t, gl_ScopeSubgroup, 16, 16, gl_MatrixUseA> ma;
+					coopmat<float16_t, gl_ScopeSubgroup, 16, 16, gl_MatrixUseB> mb;
+					coopmat<float, gl_ScopeSubgroup, 16, 16, gl_MatrixUseAccumulator> acc = coopmat<float, gl_ScopeSubgroup, 16, 16, gl_MatrixUseAccumulator>(0.0);
+					coopMatLoad(ma, a, 0, 16, gl_CooperativeMatrixLayoutRowMajor);
+					coopMatLoad(mb, a, 256, 16, gl_CooperativeMatrixLayoutRowMajor);
+					acc = coopMatMulAdd(ma, mb, acc);
+					coopMatStore(acc, c, 0, 16, gl_CooperativeMatrixLayoutRowMajor);
+				}
+			]"
+			l_bf16 := l_coop.twin
+			l_bf16.replace_substring_all ("#extension GL_EXT_shader_explicit_arithmetic_types_float16 : require", "#extension GL_EXT_bfloat16 : require")
+			l_bf16.replace_substring_all ("float16_t", "bfloat16_t")
+			create shaderc.make
+			check_true ("default target", not shaderc.targets_vulkan_1_3)
+			shaderc.set_target_vulkan_1_3 (True)
+			check_true ("target set", shaderc.targets_vulkan_1_3)
+			if attached shaderc.compile_compute (l_coop) as spv then
+				check_true ("coop spirv magic", shaderc.verify_spirv_magic (spv))
+			else
+				print ("Cooperative-matrix shader error: " + shaderc.last_error + "%N")
+				check_true ("cooperative matrix compiles under Vulkan 1.3", False)
+			end
+			if attached shaderc.compile_compute (l_bf16) as spv then
+				print ("  bf16 cooperative matrix: compiles%N")
+			else
+				print ("  bf16 cooperative matrix: does not compile: " + shaderc.last_error + "%N")
+			end
+			check_true ("plain shader under 1.3", attached shaderc.compile_compute ("#version 450%Nlayout(local_size_x = 1) in;%Nvoid main() {}%N"))
+			shaderc.dispose
+		end
+
 feature {NONE} -- Assertion
 
 	check_true (a_tag: STRING; a_condition: BOOLEAN)
