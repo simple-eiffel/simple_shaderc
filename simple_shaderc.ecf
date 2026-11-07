@@ -14,8 +14,27 @@
 			<void_safety support="all"/>
 		</capability>
 		<library name="base" location="$ISE_LIBRARY\library\base\base.ecf"/>
-		<external_include location="$VULKAN_SDK\Include"/>
-		<external_object location="$VULKAN_SDK\Lib\shaderc_shared.lib">
+		<external_cflag value="-I/opt/homebrew/opt/shaderc/include">
+			<condition>
+				<platform value="macintosh"/>
+			</condition>
+		</external_cflag>
+		<external_linker_flag value="-L/opt/homebrew/opt/shaderc/lib -lshaderc_shared">
+			<condition>
+				<platform value="macintosh"/>
+			</condition>
+		</external_linker_flag>
+		<external_linker_flag value="-lshaderc_shared">
+			<condition>
+				<platform value="unix"/>
+			</condition>
+		</external_linker_flag>
+		<external_include location="$(VULKAN_SDK)/Include">
+			<condition>
+				<platform value="windows"/>
+			</condition>
+		</external_include>
+		<external_object location="$(VULKAN_SDK)/Lib/shaderc_shared.lib">
 			<condition>
 				<platform value="windows"/>
 			</condition>
